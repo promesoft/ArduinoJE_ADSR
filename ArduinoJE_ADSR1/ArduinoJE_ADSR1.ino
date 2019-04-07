@@ -48,6 +48,8 @@ void setup() {
   delay(50);  
   setupDataStruct();
   delay(2000);  
+  attachInterrupt(digitalPinToInterrupt(Gate), GateSignal, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(Trig), TriggerSignal, RISING);
 }
 
 // the loop function runs over and over again forever
@@ -62,7 +64,55 @@ void loop() {
 ==============Send analogie PWM Value===================
 ======================================================*/ 
 void updatePWM(){
-  
+  if ( millis() < lastwaveupdate + 1 ){
+    lastwaveupdate = millis();
+    switch (state) {
+      case 0:                             //wait state
+        analogWrite(PWMOut, 0);
+        break;
+      
+      case 1:                             //attack state
+        PWMdata = PWMdata + 255/(1+analogRead(RV1));
+        if (PWMdata >= 255){
+          PWMdata = 255;
+          state = 2;
+        }
+        analogWrite(PWMOut, PWMdata);
+        break;
+      
+      case 2:                             //hold state
+        hold = hold + 1;
+        if (hold >= analogRead(RV2)){
+          hold = 1;
+          state = 3;
+        }
+        analogWrite(PWMOut, PWMdata);
+        break;
+      
+      case 3:                             //decay state
+        PWMdata = PWMdata - 127/(1+analogRead(RV3));  //RV3 = decay val
+        if (PWMdata <= analogRead(RV4)>>2){           //RV4 = sustain val
+          PWMdata = analogRead(RV4)>>2;
+          state = 4;
+        analogWrite(PWMOut, PWMdata);
+        break;
+      
+      case 4:                             //sustain state
+        analogWrite(PWMOut, PWMdata);
+        break;
+
+      case 5:                             //release state
+        PWMdata = PWMdata - 127/(1+analogRead(RV5));  //RV3 = decay val
+        if (PWMdata < 0) {
+          PWMdata = 0;
+          state = 0;
+        }
+        analogWrite(PWMOut, PWMdata);
+        break;
+
+    }
+  }
+    
 }
 /* =====================================================
 ==============Read Potentiometer Values=================
@@ -92,9 +142,7 @@ void updateLED(){
     digitalWrite(LEDData[i][0], LEDData[i][1] == 1);// 
   }
 
-  delay(1);
-/*  if ( millis() < lastbuttonupdate + 10000 ){
-  */
+//  delay(1);
 }
 
 void clearLED(){
@@ -103,16 +151,23 @@ void clearLED(){
   }
 }
 
-/*  
-  digitalWrite(LED1, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);                       // wait for a second
-  digitalWrite(LED2, HIGH);   // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED3, HIGH);   // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED4, HIGH);   // turn the LED on (HIGH is the voltage level)
-  digitalWrite(LED1, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);                       // wait for a second
-  digitalWrite(LED2, LOW);    // turn the LED off by making the voltage LOW
-  digitalWrite(LED3, LOW);    // turn the LED off by making the voltage LOW
-  digitalWrite(LED4, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);                       // wait for a second
-}*/
+/* =====================================================
+==============INTERRUPT BASED GATE TRIGGER==============
+======================================================*/ 
+void GateSignal(){
+  if (digitalRead(Gate)) {
+    gatestate = HIGH;
+    state = 1; // attack state
+  }
+  else{
+    gatestate = LOW;
+    state = 5; // release state
+  }
+}
+
+/* =====================================================
+==============INTERRUPT BASED TRIGGER SIGNAL============
+======================================================*/ 
+void TriggerSignal(){
+  triggerstate = LOW;
+}
