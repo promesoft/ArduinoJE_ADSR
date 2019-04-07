@@ -14,7 +14,7 @@ void setupDataStruct(){
   }
   for (int i=0; i <= 3; i++){
     digitalWrite(LEDData[i][0], HIGH);// Turn on LED pins one by one
-    delay(500);
+    delay(300);
   }
 } 
 // the setup function runs once when you press reset or power the board
