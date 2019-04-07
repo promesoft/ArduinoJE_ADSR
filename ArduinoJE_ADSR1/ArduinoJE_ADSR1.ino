@@ -74,8 +74,8 @@ void readPots(){
 ==============Read Switch Values========================
 ======================================================*/ 
 void readSwitch(){
-  if (analogRead(SW2_1) = 0) LEDData[2][1] = 0; 
-  if (analogRead(SW2_2) = 0) LEDData[3][1] = 0; 
+  if (analogRead(SW2_1) == 0) LEDData[2][1] = 0; 
+  if (analogRead(SW2_2) == 0) LEDData[3][1] = 0; 
   if (analogRead(SW2_1) > 0) LEDData[2][1] = 1; 
   if (analogRead(SW2_2) > 0) LEDData[3][1] = 1; 
 }
