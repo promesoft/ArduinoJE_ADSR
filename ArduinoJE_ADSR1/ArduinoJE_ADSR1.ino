@@ -32,6 +32,39 @@ void setup() {
 
 // the loop function runs over and over again forever
 void loop() {
+  updateLED();
+  updatePWM();
+
+}
+
+/* =====================================================
+==============Update LED's based on LED Values==========
+======================================================*/ 
+void updatePWM(){
+  for (int i=0; i <= 3; i++){
+    digitalWrite(LEDData[i][0], LEDData[i][1] == 1);// 
+  }
+}
+/* =====================================================
+==============Update LED's based on LED Values==========
+======================================================*/ 
+void updateLED(){
+  for (int i=0; i <= 3; i++){
+    digitalWrite(LEDData[i][0], LEDData[i][1] == 1);// 
+  }
+
+/*  delay(1);
+  if ( millis() < lastbuttonupdate + 10000 ){
+  */
+}
+
+void clearLED(){
+  for (int i=0; i <= 3; i++){
+    digitalWrite(LEDData[i][0], LOW);// 
+  }
+}
+
+/*  
   digitalWrite(LED1, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(1000);                       // wait for a second
   digitalWrite(LED2, HIGH);   // turn the LED on (HIGH is the voltage level)
@@ -43,4 +76,4 @@ void loop() {
   digitalWrite(LED3, LOW);    // turn the LED off by making the voltage LOW
   digitalWrite(LED4, LOW);    // turn the LED off by making the voltage LOW
   delay(1000);                       // wait for a second
-}
+}*/
