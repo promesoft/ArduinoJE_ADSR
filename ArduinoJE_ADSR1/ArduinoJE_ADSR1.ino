@@ -94,6 +94,7 @@ void updatePWM(){
         if (PWMdata <= analogRead(RV4)>>2){           //RV4 = sustain val
           PWMdata = analogRead(RV4)>>2;
           state = 4;
+        }
         analogWrite(PWMOut, PWMdata);
         break;
       
@@ -109,7 +110,7 @@ void updatePWM(){
         }
         analogWrite(PWMOut, PWMdata);
         break;
-
+    
     }
   }
     
