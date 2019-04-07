@@ -3,13 +3,31 @@
 */
 #include "global.h";
 
+void setupDataStruct(){
+  LEDData[0][0] = LED1;              // [LED 0 pin]  
+  LEDData[1][0] = LED2;              // [LED 1 pin]  
+  LEDData[2][0] = LED3;              // [LED 2 pin]  
+  LEDData[3][0] = LED4;              // [LED 3 pin]  
+  for (int i=0; i <= 3; i++){
+    LEDData[i][1]=0;
+    pinMode(LEDData[i][0], OUTPUT);  //  Set LED pin[i] as output
+  }
+  for (int i=0; i <= 3; i++){
+    digitalWrite(LEDData[i][0], HIGH);// Turn on LED pins one by one
+    delay(500);
+  }
+} 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  // initialize digital pin LED1-4 as an output.
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
-  pinMode(LED4, OUTPUT);
+  Serial.begin(38400);
+  Serial.println();
+  Serial.println("");
+  Serial.println(F(__FILE__));
+  Serial.print(F("Build date: "));
+  Serial.println(F(__DATE__));
+  delay(50);  
+  setupDataStruct();
+  delay(5000);  
 }
 
 // the loop function runs over and over again forever
