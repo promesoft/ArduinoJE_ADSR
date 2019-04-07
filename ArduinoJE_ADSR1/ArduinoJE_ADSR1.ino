@@ -68,7 +68,12 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  
+  LEDData[1][1] = 0;
+  if (analogRead(RV1) > 100) LEDData[1][1] = 1; 
+  if (analogRead(RV2) > 200) LEDData[1][1] = 1;   
+  if (analogRead(RV3) > 400) LEDData[1][1] = 1;   
+  if (analogRead(RV4) > 800) LEDData[1][1] = 1;   
+  if (analogRead(RV5) > 1000) LEDData[1][1] = 1;   
 }
 /* =====================================================
 ==============Read Switch Values========================
