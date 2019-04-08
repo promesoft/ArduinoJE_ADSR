@@ -28,13 +28,13 @@ void setupAnaloguePins(){
   pinMode(RV4, INPUT);                // Set Potentiometers as input
   pinMode(RV5, INPUT);                // Set Potentiometers as input
   pinMode(CV, INPUT);                 // Set CV as input
-  pinMode(SW2_1, INPUT_PULLUP);              // Set SW2_1 as input
-  pinMode(SW2_2, INPUT_PULLUP);              // Set SW2_2 as input
-/*  pinMode(SW2_1, INPUT);              // Set SW2_1 as input
+//  pinMode(SW2_1, INPUT_PULLUP);              // Set SW2_1 as input
+//  pinMode(SW2_2, INPUT_PULLUP);              // Set SW2_2 as input
+  pinMode(SW2_1, INPUT);              // Set SW2_1 as input
   pinMode(SW2_2, INPUT);              // Set SW2_2 as input
     // Enable internal pull-up resistors  
   digitalWrite(SW2_1, HIGH);
-  digitalWrite(SW2_2, HIGH);*/
+  digitalWrite(SW2_2, HIGH);
 }
 
 // the setup function runs once when you press reset or power the board
@@ -47,9 +47,22 @@ void setup() {
   Serial.println(F(__DATE__));
   delay(50);  
   setupDataStruct();
+  setupAnaloguePins();
   delay(2000);  
-  attachInterrupt(digitalPinToInterrupt(Gate), GateSignal, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(Trig), TriggerSignal, RISING);
+  gatestate = digitalRead(Gate);
+  
+  // PCMSK0 PCINT0-7 aka D8-D13 + XTAL1, XTAL2
+  // PCMSK1 PCINT8-15 aka A0-A5 + ? + Reset
+  // PCMSK2 PCINT16-23 aka D0-D7  
+  //  PCMSK2 |= bit (PCINT20);  // pin 4 = D4
+  PCMSK0 |= bit (PCINT0);  // pin 8/PB0 = D8
+  PCMSK0 |= bit (PCINT2);  // pin 10/PB2 = D10
+  PCIFR  |= bit (PCIF0);    // clear any outstanding interrupts
+  PCICR  |= bit (PCIE0);    // enable pin change interrupts for D8 to D13
+//  PCICR  |= bit (PCIE1);    // enable pin change interrupts for D8 to D13
+//  PCICR  |= bit (PCIE2);    // enable pin change interrupts for D8 to D13
+//  attachInterrupt(digitalPinToInterrupt(Gate), GateSignal, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(Trig), TriggerSignal, RISING);
 }
 
 // the loop function runs over and over again forever
@@ -64,7 +77,7 @@ void loop() {
 ==============Send analogie PWM Value===================
 ======================================================*/ 
 void updatePWM(){
-  if ( millis() < lastwaveupdate + 1 ){
+  if ( millis() > lastwaveupdate ){
     lastwaveupdate = millis();
     switch (state) {
       case 0:                             //wait state
@@ -72,68 +85,66 @@ void updatePWM(){
         break;
       
       case 1:                             //attack state
-        PWMdata = PWMdata + 255/(1+analogRead(RV1));
-        if (PWMdata >= 255){
-          PWMdata = 255;
+        PWMdata = PWMdata + atk;
+        if (PWMdata >= 1023){
+          PWMdata = 1023;
           state = 2;
         }
-        analogWrite(PWMOut, PWMdata);
+        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 2:                             //hold state
-        hold = hold + 1;
-        if (hold >= analogRead(RV2)){
-          hold = 1;
+        holdtime = holdtime + 1;
+        if (holdtime >= hold){
+          holdtime = 0;
           state = 3;
         }
-        analogWrite(PWMOut, PWMdata);
+        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 3:                             //decay state
-        PWMdata = PWMdata - 127/(1+analogRead(RV3));  //RV3 = decay val
-        if (PWMdata <= analogRead(RV4)>>2){           //RV4 = sustain val
-          PWMdata = analogRead(RV4)>>2;
+        PWMdata = PWMdata - dec;          //RV3 = decay val
+        if (PWMdata <= dec) PWMdata = 0;
+        if (PWMdata <= sus){              //RV4 = sustain val
+          PWMdata = sus;
           state = 4;
         }
-        analogWrite(PWMOut, PWMdata);
+        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 4:                             //sustain state
-        analogWrite(PWMOut, PWMdata);
+          PWMdata = sus;
+          analogWrite(PWMOut, PWMdata >> 2);
         break;
 
       case 5:                             //release state
-        PWMdata = PWMdata - 127/(1+analogRead(RV5));  //RV3 = decay val
-        if (PWMdata < 0) {
+        PWMdata = PWMdata - rel;          //RV5 = decay val
+        if (PWMdata <= rel) {
           PWMdata = 0;
           state = 0;
         }
-        analogWrite(PWMOut, PWMdata);
+        analogWrite(PWMOut, PWMdata >> 2);
         break;
     
     }
   }
-    
 }
 /* =====================================================
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  LEDData[1][1] = 0;
-  if (analogRead(RV1) > 100) LEDData[1][1] = 1; 
-  if (analogRead(RV2) > 200) LEDData[1][1] = 1;   
-  if (analogRead(RV3) > 400) LEDData[1][1] = 1;   
-  if (analogRead(RV4) > 800) LEDData[1][1] = 1;   
-  if (analogRead(RV5) > 1000) LEDData[1][1] = 1;   
+  atk = 1024 / (1+analogRead(RV1)); 
+  hold = 1 + analogRead(RV2);   
+  dec = 1024 / (1+analogRead(RV3));   
+  sus = analogRead(RV4);   
+  rel = 1024 / (1+analogRead(RV5));
 }
 /* =====================================================
 ==============Read Switch Values========================
 ======================================================*/ 
 void readSwitch(){
-  if (analogRead(SW2_1) == 0) LEDData[2][1] = 0; 
-  if (analogRead(SW2_2) == 0) LEDData[3][1] = 0; 
-  if (analogRead(SW2_1) > 0) LEDData[2][1] = 1; 
-  if (analogRead(SW2_2) > 0) LEDData[3][1] = 1; 
+if ((analogRead(SW2_1) ==  0) && gatestate ) GateSignal();
+if ((analogRead(SW2_1) >  0) && !gatestate ) GateSignal();
 }
 /* =====================================================
 ==============Update LED's based on LED Values==========
@@ -142,8 +153,6 @@ void updateLED(){
   for (int i=0; i <= 3; i++){
     digitalWrite(LEDData[i][0], LEDData[i][1] == 1);// 
   }
-
-//  delay(1);
 }
 
 void clearLED(){
@@ -156,12 +165,13 @@ void clearLED(){
 ==============INTERRUPT BASED GATE TRIGGER==============
 ======================================================*/ 
 void GateSignal(){
-  if (digitalRead(Gate)) {
-    gatestate = HIGH;
+  gatestate  = !gatestate ;
+  if (gatestate) {
+    LEDData[1][1] = 1;
     state = 1; // attack state
   }
   else{
-    gatestate = LOW;
+    LEDData[1][1] = 0;
     state = 5; // release state
   }
 }
@@ -170,5 +180,54 @@ void GateSignal(){
 ==============INTERRUPT BASED TRIGGER SIGNAL============
 ======================================================*/ 
 void TriggerSignal(){
-  triggerstate = LOW;
+  triggerstate = !triggerstate;
 }
+
+/* =====================================================
+==============HANDLE HW INTERRUPT ======================
+======================================================*/ 
+ISR (PCINT0_vect)
+ {
+ // handle pin change interrupt for D8 to D13 here
+ if ((PINB & bit (0)) != gatestate) GateSignal(); // was it D8
+ if ((PINB & bit (2)) != triggerstate) TriggerSignal(); // was it D10
+ }  // end of PCINT0_vect
+
+/*ISR (PCINT1_vect)
+ {
+ // handle pin change interrupt for D0 to D7 here
+ if (PINC & bit (4))  // if it was high
+   // do stuff
+ else
+   // do stuff
+ }  // end of PCINT1_vect
+
+ISR (PCINT2_vect)
+ {
+ // handle pin change interrupt for  here
+ if (PIND & bit (4))  // if it was high
+   // do stuff
+ else
+   // do stuff
+ }  // end of PCINT2_vect*/
+
+/*
+ * PORTD maps to Arduino digital pins 0 to 7
+
+DDRD - The Port D Data Direction Register - read/write
+PORTD - The Port D Data Register - read/write
+PIND - The Port D Input Pins Register - read only
+
+ * PORTB maps to Arduino digital pins 8 to 13 The two high bits (6 & 7) map to the crystal pins and are not usable
+
+DDRB - The Port B Data Direction Register - read/write
+PORTB - The Port B Data Register - read/write
+PINB - The Port B Input Pins Register - read only
+
+ * PORTC maps to Arduino analog pins 0 to 5. Pins 6 & 7 are only accessible on the Arduino Mini
+
+DDRC - The Port C Data Direction Register - read/write
+PORTC - The Port C Data Register - read/write
+PINC - The Port C Input Pins Register - read only
+
+ */
