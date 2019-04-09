@@ -58,7 +58,7 @@ void setup() {
   TCCR2B = 0; // same for TCCR2B
   TCNT2  = 0; // initialize counter value to 0
   // set compare match register for 25641.02564102564 Hz increments
-  OCR2A = 77; // = 16000000 / (8 * 25641) - 1 (must be <256)
+  OCR2A = 100; // = 16000000 / (8 * 25641) - 1 (must be <256)
   TCCR2B |= (1 << WGM21);   // turn on CTC mode
   //TCCR2B |= (0 << CS22) | (0 << CS21) | (1 << CS20);  // Set CS22, CS21 and CS20 bits for 1 prescaler 
   //TCCR2B |= (0 << CS22) | (1 << CS21) | (0 << CS20); // Set CS22, CS21 and CS20 bits for 8 prescaler
@@ -97,6 +97,7 @@ void updatePWM(){
 //  if ( millis() > lastwaveupdate ){
 //    lastwaveupdate = millis();
     stateupdate = LOW;
+    digitalWrite(LED3, stateupdate);
     switch (state) {
       case 0:                             //wait state
           PWMdata = 0;
@@ -163,6 +164,9 @@ void readPots(){
   dec = analogRead(RV3) >> 2;   
   sus = analogRead(RV4) >> 2;   
   rel = analogRead(RV5) >> 2;
+  if (atk == 0) atk = 1;
+  if (dec == 0) dec = 1;
+  if (rel == 0) rel = 1;
 }
 /* =====================================================
 ==============Read Switch Values========================
@@ -190,6 +194,7 @@ void clearLED(){
 ======================================================*/ 
 ISR( TIMER2_COMPA_vect ){
   stateupdate = HIGH;
+  digitalWrite(LED3, stateupdate);
 }
 
 /* =====================================================
