@@ -50,6 +50,22 @@ void setup() {
   setupAnaloguePins();
   delay(2000);  
   gatestate = digitalRead(Gate);
+
+  //http://www.8bit-era.cz/arduino-timer-interrupts-calculator.html
+  // TIMER 2 for interrupt frequency 25641.02564102564 Hz:
+  cli(); // stop interrupts
+  TCCR2A = 0; // set entire TCCR2A register to 0
+  TCCR2B = 0; // same for TCCR2B
+  TCNT2  = 0; // initialize counter value to 0
+  // set compare match register for 25641.02564102564 Hz increments
+  OCR2A = 77; // = 16000000 / (8 * 25641) - 1 (must be <256)
+  TCCR2B |= (1 << WGM21);   // turn on CTC mode
+  //TCCR2B |= (0 << CS22) | (0 << CS21) | (1 << CS20);  // Set CS22, CS21 and CS20 bits for 1 prescaler 
+  //TCCR2B |= (0 << CS22) | (1 << CS21) | (0 << CS20); // Set CS22, CS21 and CS20 bits for 8 prescaler
+  //TCCR2B |= (0 << CS22) | (1 << CS21) | (1 << CS20);  // Set CS22, CS21 and CS20 bits for 32 prescaler
+  TCCR2B |= (1 << CS22) | (0 << CS21) | (0 << CS20);   // Set CS22, CS21 and CS20 bits for 64 prescaler
+  TIMSK2 |= (1 << OCIE2A);   // enable timer compare interrupt
+  sei(); // allow interrupts
   
   // PCMSK0 PCINT0-7 aka D8-D13 + XTAL1, XTAL2
   // PCMSK1 PCINT8-15 aka A0-A5 + ? + Reset
@@ -77,67 +93,67 @@ void loop() {
 ==============Send analogie PWM Value===================
 ======================================================*/ 
 void updatePWM(){
-  if ( millis() > lastwaveupdate ){
-    lastwaveupdate = millis();
+  if ( stateupdate ){
+//  if ( millis() > lastwaveupdate ){
+//    lastwaveupdate = millis();
+    stateupdate = LOW;
     switch (state) {
       case 0:                             //wait state
-        analogWrite(PWMOut, 0);
+          PWMdata = 0;
         break;
       
       case 1:                             //attack state
-        PWMdata = PWMdata + atk;
-        if (PWMdata >= 1023){
-          PWMdata = 1023;
+        PWMdata ++;
+        if (PWMdata >= 254){
+          PWMdata = 255;
           state = 2;
+          OCR2A = hold; // change timer interrupt compare
         }
-        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 2:                             //hold state
-        holdtime = holdtime + 1;
+        holdtime++;
         if (holdtime >= hold){
           holdtime = 0;
           state = 3;
+          OCR2A = dec; // change timer interrupt compare
         }
-        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 3:                             //decay state
-        PWMdata = PWMdata - dec;          //RV3 = decay val
-        if (PWMdata <= dec) PWMdata = 0;
-        if (PWMdata <= sus){              //RV4 = sustain val
+        PWMdata --; 
+        if (PWMdata <= sus){              
           PWMdata = sus;
           state = 4;
+          OCR2A = 255; // change timer interrupt compare
         }
-        analogWrite(PWMOut, PWMdata >> 2);
         break;
       
       case 4:                             //sustain state
           PWMdata = sus;
-          analogWrite(PWMOut, PWMdata >> 2);
         break;
 
       case 5:                             //release state
-        PWMdata = PWMdata - rel;          //RV5 = decay val
-        if (PWMdata <= rel) {
+        PWMdata --; 
+        if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
         }
-        analogWrite(PWMOut, PWMdata >> 2);
         break;
     
     }
+  analogWrite(PWMOut, PWMdata);
   }
 }
 /* =====================================================
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = 1024 / (1+analogRead(RV1)); 
-  hold = 1 + analogRead(RV2);   
-  dec = 1024 / (1+analogRead(RV3));   
-  sus = analogRead(RV4);   
-  rel = 1024 / (1+analogRead(RV5));
+  atk = 1 + analogRead(RV1) >> 2; 
+  hold = 1 + analogRead(RV2) >> 2;   
+  dec = 1 + analogRead(RV3) >> 2;   
+  sus = analogRead(RV4) >> 2;   
+  rel = 1 + analogRead(RV5) >> 2;
 }
 /* =====================================================
 ==============Read Switch Values========================
@@ -160,6 +176,12 @@ void clearLED(){
     digitalWrite(LEDData[i][0], LOW);// 
   }
 }
+/* =====================================================
+==============TIMER INTERRUPT ==========================
+======================================================*/ 
+ISR( TIMER2_COMPA_vect ){
+  stateupdate = HIGH;
+}
 
 /* =====================================================
 ==============INTERRUPT BASED GATE TRIGGER==============
@@ -169,10 +191,12 @@ void GateSignal(){
   if (gatestate) {
     LEDData[1][1] = 1;
     state = 1; // attack state
+    OCR2A = atk; // change timer interrupt compare
   }
   else{
     LEDData[1][1] = 0;
     state = 5; // release state
+    OCR2A = rel; // change timer interrupt compare
   }
 }
 

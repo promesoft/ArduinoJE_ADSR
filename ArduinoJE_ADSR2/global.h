@@ -38,12 +38,13 @@
 3 - decay
 4 - release
 */
-//boolean gatestate = LOW;
+boolean stateupdate = LOW;
 boolean gatestate = LOW;
 boolean triggerstate = LOW;
 unsigned int state = 0;
 unsigned int atk = 1, hold = 1, dec = 1, sus = 1, rel = 1;
 unsigned int LEDData[4][2]; //[LED#][LED Pin,DATA]
 unsigned long lastwaveupdate = 0; // millis timer between 
-unsigned PWMdata = 0, holdtime = 0;
+unsigned holdtime = 0;
+byte PWMdata = 0;
 //float PWMdata;
