@@ -107,7 +107,9 @@ void updatePWM(){
         if (PWMdata >= 254){
           PWMdata = 255;
           state = 2;
-          OCR2A = hold; // change timer interrupt compare
+          cli();
+          OCR2A = 255; // change timer interrupt compare
+          sei();
         }
         break;
       
@@ -116,7 +118,9 @@ void updatePWM(){
         if (holdtime >= hold){
           holdtime = 0;
           state = 3;
+          cli();
           OCR2A = dec; // change timer interrupt compare
+          sei();
         }
         break;
       
@@ -125,7 +129,9 @@ void updatePWM(){
         if (PWMdata <= sus){              
           PWMdata = sus;
           state = 4;
-          OCR2A = 255; // change timer interrupt compare
+          cli();
+          OCR2A = 255; //  timer interrupt compare = slow
+          sei();
         }
         break;
       
@@ -138,6 +144,9 @@ void updatePWM(){
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
+          cli();
+          OCR2A = 255; //  timer interrupt compare = slow
+          sei();
         }
         break;
     
@@ -149,11 +158,11 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = 1 + analogRead(RV1) >> 2; 
-  hold = 1 + analogRead(RV2) >> 2;   
-  dec = 1 + analogRead(RV3) >> 2;   
+  atk = analogRead(RV1) >> 2; 
+  hold = analogRead(RV2) >> 2;   
+  dec = analogRead(RV3) >> 2;   
   sus = analogRead(RV4) >> 2;   
-  rel = 1 + analogRead(RV5) >> 2;
+  rel = analogRead(RV5) >> 2;
 }
 /* =====================================================
 ==============Read Switch Values========================
@@ -212,9 +221,11 @@ void TriggerSignal(){
 ======================================================*/ 
 ISR (PCINT0_vect)
  {
+ cli();
  // handle pin change interrupt for D8 to D13 here
  if ((PINB & bit (0)) != gatestate) GateSignal(); // was it D8
  if ((PINB & bit (2)) != triggerstate) TriggerSignal(); // was it D10
+ sei();
  }  // end of PCINT0_vect
 
 /*ISR (PCINT1_vect)
