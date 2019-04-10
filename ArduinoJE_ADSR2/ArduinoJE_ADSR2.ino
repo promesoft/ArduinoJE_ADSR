@@ -58,13 +58,16 @@ void setup() {
   TCCR2B = 0; // same for TCCR2B
   TCNT2  = 0; // initialize counter value to 0
   // set compare match register for 25641.02564102564 Hz increments
-  OCR2A = 100; // = 16000000 / (8 * 25641) - 1 (must be <256)
-  TCCR2B |= (1 << WGM21);   // turn on CTC mode
+  OCR2A = 50; // = 16000000 / (8 * 25641) - 1 (must be <256)
+  TCCR2A |= (1 << WGM21);   // turn on CTC mode
+  //TCCR2B |= (1 << WGM21);   // turn on CTC mode ??
   //TCCR2B |= (0 << CS22) | (0 << CS21) | (1 << CS20);  // Set CS22, CS21 and CS20 bits for 1 prescaler 
   //TCCR2B |= (0 << CS22) | (1 << CS21) | (0 << CS20); // Set CS22, CS21 and CS20 bits for 8 prescaler
   //TCCR2B |= (0 << CS22) | (1 << CS21) | (1 << CS20);  // Set CS22, CS21 and CS20 bits for 32 prescaler
-  TCCR2B |= (1 << CS22) | (0 << CS21) | (0 << CS20);   // Set CS22, CS21 and CS20 bits for 64 prescaler
+  //TCCR2B |= (1 << CS22) | (0 << CS21) | (0 << CS20);   // Set CS22, CS21 and CS20 bits for 64 prescaler
+  TCCR2B |= (1 << CS22) | (1 << CS21) | (0 << CS20);   // Set CS22, CS21 and CS20 bits for 256 prescaler
   TIMSK2 |= (1 << OCIE2A);   // enable timer compare interrupt
+  EIFR = bit (INTF1);  //Cancel Rising Interrupt on D3
   sei(); // allow interrupts
   
   // PCMSK0 PCINT0-7 aka D8-D13 + XTAL1, XTAL2
@@ -84,6 +87,7 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
   updateLED();
+  LEDData[3][1] = stateupdate;
   updatePWM();
   readPots();
   readSwitch();
@@ -97,7 +101,6 @@ void updatePWM(){
 //  if ( millis() > lastwaveupdate ){
 //    lastwaveupdate = millis();
     stateupdate = LOW;
-    digitalWrite(LED3, stateupdate);
     switch (state) {
       case 0:                             //wait state
           PWMdata = 0;
@@ -108,9 +111,9 @@ void updatePWM(){
         if (PWMdata >= 254){
           PWMdata = 255;
           state = 2;
-          cli();
+          /*cli();
           OCR2A = 255; // change timer interrupt compare
-          sei();
+          sei();*/
         }
         break;
       
@@ -119,9 +122,9 @@ void updatePWM(){
         if (holdtime >= hold){
           holdtime = 0;
           state = 3;
-          cli();
+          /*cli();
           OCR2A = dec; // change timer interrupt compare
-          sei();
+          sei();*/
         }
         break;
       
@@ -130,9 +133,9 @@ void updatePWM(){
         if (PWMdata <= sus){              
           PWMdata = sus;
           state = 4;
-          cli();
+          /*cli();
           OCR2A = 255; //  timer interrupt compare = slow
-          sei();
+          sei();*/
         }
         break;
       
@@ -145,9 +148,9 @@ void updatePWM(){
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
-          cli();
+          /*cli();
           OCR2A = 255; //  timer interrupt compare = slow
-          sei();
+          sei();*/
         }
         break;
     
@@ -159,14 +162,17 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = analogRead(RV1) >> 2; 
+//  atk = analogRead(RV1) >> 2; 
   hold = analogRead(RV2) >> 2;   
-  dec = analogRead(RV3) >> 2;   
+//  dec = analogRead(RV3) >> 2;   
   sus = analogRead(RV4) >> 2;   
-  rel = analogRead(RV5) >> 2;
+//  rel = analogRead(RV5) >> 2;
   if (atk == 0) atk = 1;
   if (dec == 0) dec = 1;
   if (rel == 0) rel = 1;
+  atk = 1;
+  dec = 1;
+  rel = 1;
 }
 /* =====================================================
 ==============Read Switch Values========================
@@ -194,7 +200,6 @@ void clearLED(){
 ======================================================*/ 
 ISR( TIMER2_COMPA_vect ){
   stateupdate = HIGH;
-  digitalWrite(LED3, stateupdate);
 }
 
 /* =====================================================
@@ -205,12 +210,12 @@ void GateSignal(){
   if (gatestate) {
     LEDData[1][1] = 1;
     state = 1; // attack state
-    OCR2A = atk; // change timer interrupt compare
+    //OCR2A = atk; // change timer interrupt compare
   }
   else{
     LEDData[1][1] = 0;
     state = 5; // release state
-    OCR2A = rel; // change timer interrupt compare
+    //OCR2A = rel; // change timer interrupt compare
   }
 }
 
