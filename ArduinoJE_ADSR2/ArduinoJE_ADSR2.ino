@@ -97,9 +97,10 @@ void loop() {
 ==============Send analogie PWM Value===================
 ======================================================*/ 
 void updatePWM(){
-  if ( stateupdate ){
-//  if ( millis() > lastwaveupdate ){
-//    lastwaveupdate = millis();
+//  if ( stateupdate ){
+  if ( millis() > lastwaveupdate ){
+    lastwaveupdate = millis();
+    waveupdate = micros();
     stateupdate = LOW;
     switch (state) {
       case 0:                             //wait state
