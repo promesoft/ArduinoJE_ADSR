@@ -51,6 +51,7 @@ void setup() {
   delay(2000);  
   gatestate = digitalRead(Gate);
 
+/*
   //http://www.8bit-era.cz/arduino-timer-interrupts-calculator.html
   // TIMER 2 for interrupt frequency 25641.02564102564 Hz:
   cli(); // stop interrupts
@@ -69,7 +70,7 @@ void setup() {
   TIMSK2 |= (1 << OCIE2A);   // enable timer compare interrupt
   EIFR = bit (INTF1);  //Cancel Rising Interrupt on D3
   sei(); // allow interrupts
-  
+*/  
   // PCMSK0 PCINT0-7 aka D8-D13 + XTAL1, XTAL2
   // PCMSK1 PCINT8-15 aka A0-A5 + ? + Reset
   // PCMSK2 PCINT16-23 aka D0-D7  
@@ -87,7 +88,7 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
   updateLED();
-  LEDData[3][1] = stateupdate;
+//  LEDData[3][1] = stateupdate;
   updatePWM();
   readPots();
   readSwitch();
