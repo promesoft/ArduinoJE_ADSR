@@ -52,8 +52,8 @@ unsigned int atk = 1, hold = 1, dec = 1, sus = 1, rel = 1;
 unsigned int LEDData[4][2]; //[LED#][LED Pin,DATA]
 unsigned long waveupdate = 0, lastwaveupdate = 0; // millis timer between 
 unsigned int holdtime = 0, miliadd = 0;
-byte PWMdata = 0;
-//float PWMdata;
+byte PWMdatabyte = 0;
+float PWMdata = 0;
 
 /*uint8_t potTable[256] ={127,124,121,118,115,112,109,106,103,100,97,94,91,88,85,82,
                             80,76,73,70,68,65,62,60,57,54,52,49,47,45,42,40,

@@ -95,6 +95,8 @@ void updatePWM(){
           state = 2;
         }
         LEDData[1][1] = 1;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 0;
         break;
       
       case 2:                             //hold state
@@ -104,24 +106,30 @@ void updatePWM(){
           state = 3;
         }
         LEDData[1][1] = 0;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 0;
         break;
       
       case 3:                             //decay state
-        PWMdata --; 
+        PWMdata = PWMdata - dec; 
         if (PWMdata <= sus){              
           PWMdata = sus;
           state = 4;
         }
+        LEDData[1][1] = 0;
         LEDData[2][1] = 1;
+        LEDData[3][1] = 0;
         break;
       
       case 4:                             //sustain state
           PWMdata = sus;
+          LEDData[1][1] = 0;
           LEDData[2][1] = 0;
+          LEDData[3][1] = 0;
         break;
 
       case 5:                             //release state
-        PWMdata --; 
+        PWMdata = PWMdata - rel; 
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
@@ -130,39 +138,46 @@ void updatePWM(){
         break;
     
     }
-  analogWrite(PWMOut, PWMdata);
+  analogWrite(PWMOut, byte(PWMdata));
   }
 }
 /* =====================================================
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = analogRead(RV1) >> 1; 
+  atk = calcStep(RV1); 
+  hold = calcStep(RV2); 
+  dec = calcStep(RV3); 
+  sus = calcStep(RV4); 
+  rel = calcStep(RV5); 
+  /*hold = analogRead(RV2) >> 1;   
+  dec = analogRead(RV3) >> 1;   
+  sus = analogRead(RV4) >> 1;   
+  rel = analogRead(RV5) >> 1;*/
+}
+unsigned int calcStep(unsigned int Pot){
+  unsigned int value = analogRead(Pot) >> 1; 
   miliadd = 0;
-  if (atk > 127) {
-    atk = atk >> 1;
+  if (value > 127) {
+    value = value >> 1;
     miliadd = 1;
   }
   else {
-    if  (atk > 255) {
-      atk = atk >> 2;
+    if  (value > 255) {
+      value = value >> 2;
       miliadd = 3;
     }
     else {
-      if  (atk > 511) {
-        atk = atk >> 3;
+      if  (value > 511) {
+        value = value >> 3;
         miliadd = 7;
       }
     }
   }
-  hold = analogRead(RV2) >> 1;   
-  dec = analogRead(RV3) >> 1;   
-  sus = analogRead(RV4) >> 1;   
-  rel = analogRead(RV5) >> 1;
-  if (atk == 0) atk = 1;
-  if (dec == 0) dec = 1;
-  if (rel == 0) rel = 1;
+  if (value == 0) value = 1;
+  return value;
 }
+  
 /* =====================================================
 ==============Read Switch Values========================
 ======================================================*/ 
