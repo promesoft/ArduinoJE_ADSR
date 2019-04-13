@@ -110,8 +110,8 @@ void updatePWM(){
           holdtime = 0;
           state = 3;
         }
-        LEDData[1][1] = 0;
-        LEDData[2][1] = 0;
+        LEDData[1][1] = 1;
+        LEDData[2][1] = 1;
         LEDData[3][1] = 0;
         break;
       
@@ -129,8 +129,8 @@ void updatePWM(){
       case 4:                             //sustain state
           PWMdata = sus;
           LEDData[1][1] = 0;
-          LEDData[2][1] = 0;
-          LEDData[3][1] = 0;
+          LEDData[2][1] = 1;
+          LEDData[3][1] = 1;
         break;
 
       case 5:                             //release state
@@ -157,7 +157,7 @@ void readPots(){
   hold = calcStep(RV2, 2); 
   dec = calcStep(RV3, 3); 
   sus = calcStep(RV4, 4); 
-  rel = 2+calcStep(RV5, 5); 
+  rel = calcStep(RV5, 5); 
   /*hold = analogRead(RV2) >> 1;   
   dec = analogRead(RV3) >> 1;   
   sus = analogRead(RV4) >> 1;   
