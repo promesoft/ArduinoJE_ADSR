@@ -1,6 +1,12 @@
 #include <EEPROM.h>
 /* -----------------------------------------------
  *  GLOBAL DEFINES
+ *  Timer 0   Pins 5 and 6: controlled by Timer0
+ *  Timer 1   Pins 9 and 10: controlled by Timer1
+ *  Timer 2   Pins 11 and 3: controlled by Timer2
+ *  PWM       Pins 3, 5, 6, 9, 10, 11 (PD3, PD5, PD6, PB1, PB2, PB3)
+ *  ADC       Pins A0-A7 (PC0-PC5+PE2+PE3)
+ *  I2C       Pin A4 - SDA - Pin A5 - SCL
  * -----------------------------------------------
  */
 
