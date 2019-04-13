@@ -77,20 +77,24 @@ void loop() {
 void updatePWM(){
 //  if ( stateupdate ){
   if ( millis() > lastwaveupdate ){
-    lastwaveupdate = millis();
+    lastwaveupdate = millis() + miliadd;
     waveupdate = micros();
 //    stateupdate = LOW;
     switch (state) {
       case 0:                             //wait state
           PWMdata = 0;
+        LEDData[1][1] = 0;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 0;
         break;
       
       case 1:                             //attack state
-        PWMdata ++;
+        PWMdata = PWMdata + atk;
         if (PWMdata >= 254){
           PWMdata = 255;
           state = 2;
         }
+        LEDData[1][1] = 1;
         break;
       
       case 2:                             //hold state
@@ -99,6 +103,7 @@ void updatePWM(){
           holdtime = 0;
           state = 3;
         }
+        LEDData[1][1] = 0;
         break;
       
       case 3:                             //decay state
@@ -107,10 +112,12 @@ void updatePWM(){
           PWMdata = sus;
           state = 4;
         }
+        LEDData[2][1] = 1;
         break;
       
       case 4:                             //sustain state
           PWMdata = sus;
+          LEDData[2][1] = 0;
         break;
 
       case 5:                             //release state
@@ -119,6 +126,7 @@ void updatePWM(){
           PWMdata = 0;
           state = 0;
         }
+        LEDData[3][1] = 1;
         break;
     
     }
@@ -129,17 +137,31 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-//  atk = analogRead(RV1) >> 2; 
-  hold = analogRead(RV2) >> 2;   
-//  dec = analogRead(RV3) >> 2;   
-  sus = analogRead(RV4) >> 2;   
-//  rel = analogRead(RV5) >> 2;
+  atk = analogRead(RV1) >> 1; 
+  miliadd = 0;
+  if (atk > 127) {
+    atk = atk >> 1;
+    miliadd = 1;
+  }
+  else {
+    if  (atk > 255) {
+      atk = atk >> 2;
+      miliadd = 3;
+    }
+    else {
+      if  (atk > 511) {
+        atk = atk >> 3;
+        miliadd = 7;
+      }
+    }
+  }
+  hold = analogRead(RV2) >> 1;   
+  dec = analogRead(RV3) >> 1;   
+  sus = analogRead(RV4) >> 1;   
+  rel = analogRead(RV5) >> 1;
   if (atk == 0) atk = 1;
   if (dec == 0) dec = 1;
   if (rel == 0) rel = 1;
-  atk = 1;
-  dec = 1;
-  rel = 1;
 }
 /* =====================================================
 ==============Read Switch Values========================
@@ -169,12 +191,12 @@ void clearLED(){
 void GateSignal(){
   gatestate  = !gatestate ;
   if (gatestate) {
-    LEDData[1][1] = 1;
+    LEDData[0][1] = 1;
     state = 1; // attack state
     //OCR2A = atk; // change timer interrupt compare
   }
   else{
-    LEDData[1][1] = 0;
+    LEDData[0][1] = 0;
     state = 5; // release state
     //OCR2A = rel; // change timer interrupt compare
   }
