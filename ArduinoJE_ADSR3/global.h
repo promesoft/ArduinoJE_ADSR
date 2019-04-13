@@ -38,7 +38,7 @@
 3 - decay
 4 - release
 */
-boolean stateupdate = LOW;
+//boolean stateupdate = LOW;
 boolean gatestate = LOW;
 boolean triggerstate = LOW;
 unsigned int state = 0;
