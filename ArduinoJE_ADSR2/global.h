@@ -1,6 +1,8 @@
 #include <EEPROM.h>
 /* -----------------------------------------------
  *  GLOBAL DEFINES
+ *  
+ *  HW PLATFORM = Marangisto AHDSR 2018 Rev A
  * -----------------------------------------------
  */
 
