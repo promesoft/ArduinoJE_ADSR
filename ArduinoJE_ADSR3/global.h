@@ -7,6 +7,10 @@
  *  PWM       Pins 3, 5, 6, 9, 10, 11 (PD3, PD5, PD6, PB1, PB2, PB3)
  *  ADC       Pins A0-A7 (PC0-PC5+PE2+PE3)
  *  I2C       Pin A4 - SDA - Pin A5 - SCL
+ *  
+ *  
+ *  HW PLATFORM = Marangisto AHDSR Rev A 2018
+ *  
  * -----------------------------------------------
  */
 

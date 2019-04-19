@@ -95,7 +95,7 @@ void updatePWM(){
       
       case 1:                             //attack state
         PWMdata = PWMdata + 256 - atk;
-        if (PWMdata >= 254){
+        if (PWMdata >= 255){
           PWMdata = 255;
           state = 2;
         }
@@ -190,8 +190,8 @@ unsigned int calcStep(unsigned int pot, unsigned int stat){
 ==============Read Switch Values========================
 ======================================================*/ 
 void readSwitch(){
-if ((analogRead(SW2_2) ==  0) && gatestate ) GateSignal();
-if ((analogRead(SW2_2) >  100) && !gatestate ) GateSignal();
+//if ((analogRead(SW2_2) ==  0) && gatestate ) GateSignal();
+//if ((analogRead(SW2_2) >  100) && !gatestate ) GateSignal();
 }
 /* =====================================================
 ==============Update LED's based on LED Values==========
