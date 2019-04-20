@@ -98,6 +98,7 @@ void updatePWM(){
         if (PWMdata >= 255){
           PWMdata = 255;
           state = 2;
+          lastwaveupdate = millis() + miliadd[state];
         }
         LEDData[1][1] = 1;
         LEDData[2][1] = 0;
@@ -109,6 +110,7 @@ void updatePWM(){
         if (holdtime >= hold){
           holdtime = 0;
           state = 3;
+          lastwaveupdate = millis() + miliadd[state];
         }
         LEDData[1][1] = 1;
         LEDData[2][1] = 1;
@@ -120,6 +122,7 @@ void updatePWM(){
         if (PWMdata <= sus){              
           PWMdata = sus;
           state = 4;
+          lastwaveupdate = millis() + miliadd[state+1];
         }
         LEDData[1][1] = 0;
         LEDData[2][1] = 1;
@@ -182,7 +185,8 @@ unsigned int calcStep(unsigned int pot, unsigned int stat){
       }
     }
   }
-  if (value == 0) value = 1;
+  if (value <= 1) value = 1;
+  if (value >= 255) value = 255;
   return value;
 }
   
