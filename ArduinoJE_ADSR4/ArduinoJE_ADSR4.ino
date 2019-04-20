@@ -82,69 +82,53 @@ void updatePWM(){
 //  if ( stateupdate ){
   if ( millis() > laststateupdate ){
     laststateupdate = millis() + miliadd[state];
-    waveupdate = micros();
-//    stateupdate = LOW;
+    if (millis() > nextstate && nextstate != 0) {
+      nextstate = 0;
+      state++;
+      if (state > 5) state=0;
+    }
+//    waveupdate = micros();
     cli();
     switch (state) {
       case 0:                             //wait state
           PWMdata = 0;
-        LEDData[1][1] = 0;
-        LEDData[2][1] = 0;
-        LEDData[3][1] = 0;
         break;
       
       case 1:                             //attack state
+        if (nextstate == 0) nextstate = atk + millis();
         PWMdata = PWMdata + 256 - atk;
         if (PWMdata >= 255){
           PWMdata = 255;
-          state = 2;
-          laststateupdate = millis() + miliadd[state];
         }
-        LEDData[1][1] = 1;
-        LEDData[2][1] = 0;
-        LEDData[3][1] = 0;
         break;
       
       case 2:                             //hold state
+        if (nextstate == 0) nextstate = hold + millis();
         holdtime++;
         if (holdtime >= hold){
           holdtime = 0;
-          state = 3;
-          laststateupdate = millis() + miliadd[state];
         }
-        LEDData[1][1] = 1;
-        LEDData[2][1] = 1;
-        LEDData[3][1] = 0;
         break;
       
       case 3:                             //decay state
+        if (nextstate == 0) nextstate = dec + millis();
         PWMdata = PWMdata - 256 + dec; 
         if (PWMdata <= sus){              
           PWMdata = sus;
-          state = 4;
-          laststateupdate = millis() + miliadd[state+1];
         }
-        LEDData[1][1] = 0;
-        LEDData[2][1] = 1;
-        LEDData[3][1] = 0;
         break;
       
       case 4:                             //sustain state
           PWMdata = sus;
-          LEDData[1][1] = 0;
-          LEDData[2][1] = 1;
-          LEDData[3][1] = 1;
         break;
 
       case 5:                             //release state
+        if (nextstate == 0) nextstate = rel + millis();
         PWMdata = PWMdata - 256 + rel; 
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
         }
-        LEDData[1][1] = 0;
-        LEDData[2][1] = 0;
-        LEDData[3][1] = 1;
         break;
     
     }
@@ -161,11 +145,9 @@ void readPots(){
   dec = calcStep(RV3, 3); 
   sus = calcStep(RV4, 4); 
   rel = calcStep(RV5, 5); 
-  /*hold = analogRead(RV2) >> 1;   
-  dec = analogRead(RV3) >> 1;   
-  sus = analogRead(RV4) >> 1;   
-  rel = analogRead(RV5) >> 1;*/
+
 }
+
 unsigned int calcStep(unsigned int pot, unsigned int stat){
   unsigned int value = analogRead(pot) >> 1; 
   miliadd[stat] = 0;

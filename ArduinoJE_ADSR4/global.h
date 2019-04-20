@@ -54,7 +54,7 @@ boolean triggerstate = LOW;
 unsigned int state = 0;
 unsigned int atk = 1, hold = 1, dec = 1, sus = 1, rel = 1;
 unsigned int LEDData[4][2]; //[LED#][LED Pin,DATA]
-unsigned long waveupdate = 0, laststateupdate = 0m nextstate = 0; // millis timer between 
+unsigned long waveupdate = 0, laststateupdate = 0, nextstate = 0; // millis timer between 
 unsigned int holdtime = 0, miliadd[6];
 byte PWMdatabyte = 0;
 float PWMdata = 0;
