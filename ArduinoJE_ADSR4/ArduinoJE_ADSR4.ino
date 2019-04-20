@@ -14,7 +14,7 @@ void setupDataStruct(){
   }
   for (int i=0; i <= 3; i++){
     digitalWrite(LEDData[i][0], HIGH);// Turn on LED pins one by one
-    delay(300);
+    delay(200);
   }
   pinMode(Gate, INPUT);               // Set Gate as input
   pinMode(Trig, INPUT);               // Set Trig as input
@@ -52,7 +52,7 @@ void setup() {
   delay(50);  
   setupDataStruct();
   setupAnaloguePins();
-  delay(1000);  
+  delay(700);  
   gatestate = digitalRead(Gate);
 
   // PCMSK0 PCINT0-7 aka D8-D13 + XTAL1, XTAL2
@@ -96,7 +96,7 @@ void updatePWM(){
       
       case 1:                             //attack state
         if (nextstate == 0) nextstate = atk + millis();
-        PWMdata = PWMdata + 256 - atk;
+        PWMdata = PWMdata + calcStep(255);
         if (PWMdata >= 255){
           PWMdata = 255;
         }
@@ -112,7 +112,7 @@ void updatePWM(){
       
       case 3:                             //decay state
         if (nextstate == 0) nextstate = dec + millis();
-        PWMdata = PWMdata - 256 + dec; 
+        PWMdata = PWMdata + calcStep(sus);
         if (PWMdata <= sus){              
           PWMdata = sus;
         }
@@ -124,7 +124,7 @@ void updatePWM(){
 
       case 5:                             //release state
         if (nextstate == 0) nextstate = rel + millis();
-        PWMdata = PWMdata - 256 + rel; 
+        PWMdata = PWMdata + calcStep(0);
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
@@ -140,16 +140,15 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = calcStep(RV1, 1); 
-  hold = calcStep(RV2, 2); 
-  dec = calcStep(RV3, 3); 
-  sus = calcStep(RV4, 4); 
-  rel = calcStep(RV5, 5); 
+  atk = calcTime(RV1, 1); 
+  hold = calcTime(RV2, 2); 
+  dec = calcTime(RV3, 3); 
+  sus = calcTime(RV4, 4); 
+  rel = calcTime(RV5, 5); 
 
 }
-
-unsigned int calcStep(unsigned int pot, unsigned int stat){
-  unsigned int value = analogRead(pot) >> 1; 
+unsigned int calcTime(unsigned int pot, unsigned int stat){
+  unsigned int value = analogRead(pot) + 1; 
   miliadd[stat] = 0;
   if (value > 63) {
     value = value >> 1;
@@ -170,6 +169,19 @@ unsigned int calcStep(unsigned int pot, unsigned int stat){
   if (value <= 1) value = 1;
   if (value >= 255) value = 255;
   return value;
+}
+  
+int calcStep(unsigned int endval){
+  float value = 0;
+  int untilnext = nextstate - millis();
+  if (untilnext > 1) {
+    value = (miliadd[state]+1) * (endval - PWMdata) / untilnext;
+    
+  }
+  else value = 1;
+  if (endval <= 1) value = 1;
+  if (endval >= 255) value = 255;
+  return int(value);
 }
   
 /* =====================================================
