@@ -166,17 +166,17 @@ void readPots(){
 unsigned int calcStep(unsigned int pot, unsigned int stat){
   unsigned int value = analogRead(pot) >> 1; 
   miliadd[stat] = 0;
-  if (value > 127) {
+  if (value > 63) {
     value = value >> 1;
     miliadd[stat] = 1;
   }
   else {
-    if  (value > 255) {
+    if  (value > 127) {
       value = value >> 2;
       miliadd[stat] = 3;
     }
     else {
-      if  (value > 511) {
+      if  (value > 255) {
         value = value >> 3;
         miliadd[stat] = 7;
       }
