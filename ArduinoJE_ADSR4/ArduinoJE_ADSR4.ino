@@ -1,5 +1,8 @@
 /*
-
+ *  Envelope - AHDSR 
+ *  
+ *  HW PLATFORM = Marangisto AHDSR Rev A 2018
+ *  
 */
 #include "global.h";
 
@@ -36,9 +39,6 @@ void setupAnaloguePins(){
 //  pinMode(SW2_2, INPUT_PULLUP);              // Set SW2_2 as input
   pinMode(SW2_1, INPUT);              // Set SW2_1 as input
   pinMode(SW2_2, INPUT);              // Set SW2_2 as input
-    // Enable internal pull-up resistors  
-  //digitalWrite(SW2_1, HIGH);
-  //digitalWrite(SW2_2, HIGH);
 }
 
 // the setup function runs once when you press reset or power the board
@@ -111,7 +111,10 @@ void updatePWM(){
         break;
       
       case 3:                             //decay state
-        if (nextstate == 0) nextstate = dec + millis();
+        if (nextstate == 0) {
+          nextstate = dec + millis();
+          PWMdata = 255;
+        }
         PWMdata = PWMdata + calcStep(sus);
         if (PWMdata <= sus){              
           PWMdata = sus;
@@ -123,8 +126,16 @@ void updatePWM(){
         break;
 
       case 5:                             //release state
-        if (nextstate == 0) nextstate = rel + millis();
+        if (nextstate == 0) {
+          nextstate = rel + millis();
+          PWMdata = sus;
+        }
         PWMdata = PWMdata + calcStep(0);
+/*        if (nextstate == 0) {
+          nextstate = 255 + millis();
+          PWMdata = sus;
+        }*/
+        PWMdata = PWMdata - 1;
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
@@ -140,11 +151,11 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = calcTime(RV1, 1); 
-  hold = calcTime(RV2, 2); 
-  dec = calcTime(RV3, 3); 
-  sus = calcTime(RV4, 4); 
-  rel = calcTime(RV5, 5) << 2; 
+  atk = calcTime(RV1, 1) << 2; 
+  hold = calcTime(RV2, 2) << 2; 
+  dec = calcTime(RV3, 3) << 2; 
+  sus = analogRead(pot) + 1;  
+  rel = calcTime(RV5, 5) << 4; 
 
 }
 unsigned int calcTime(unsigned int pot, unsigned int stat){
@@ -178,7 +189,7 @@ float calcStep(unsigned int endval){
     value = (miliadd[state]+1) * (endval - PWMdata) / untilnext;
     
   }
-  else value = 255;
+  else value = value * 100;
   if (endval <= 1) value = 1;
   if (endval >= 255) value = 255;
   return value;
