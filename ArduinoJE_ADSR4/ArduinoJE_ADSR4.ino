@@ -84,14 +84,15 @@ void updatePWM(){
     laststateupdate = millis() + miliadd[state];
     if (millis() > nextstate && nextstate != 0) {
       nextstate = 0;
-      state++;
-      if (state > 5) state=0;
     }
 //    waveupdate = micros();
     cli();
     switch (state) {
       case 0:                             //wait state
-          PWMdata = 0;
+        PWMdata = 0;
+        LEDData[1][1] = 0;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 0;
         break;
       
       case 1:                             //attack state
@@ -99,14 +100,22 @@ void updatePWM(){
         PWMdata = PWMdata + calcStep(255);
         if (PWMdata >= 255){
           PWMdata = 255;
+          state = 2; // hold state
         }
+        LEDData[1][1] = 1;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 0;
         break;
       
       case 2:                             //hold state
-        if (nextstate == 0) nextstate = hold + millis();
+        if (nextstate == 0) {
+          nextstate = hold + millis();
+          PWMdata = 255;
+        }
         holdtime++;
         if (holdtime >= hold){
           holdtime = 0;
+          state = 3; // release state
         }
         break;
       
@@ -118,28 +127,29 @@ void updatePWM(){
         PWMdata = PWMdata + calcStep(sus);
         if (PWMdata <= sus){              
           PWMdata = sus;
+          state = 4; // sustain state
         }
         break;
       
       case 4:                             //sustain state
-          PWMdata = sus;
+        PWMdata = sus;
+        LEDData[1][1] = 0;
+        LEDData[2][1] = 1;
+        LEDData[3][1] = 0;
         break;
 
       case 5:                             //release state
         if (nextstate == 0) {
           nextstate = rel + millis();
-          PWMdata = sus;
         }
         PWMdata = PWMdata + calcStep(0);
-/*        if (nextstate == 0) {
-          nextstate = 255 + millis();
-          PWMdata = sus;
-        }*/
-        PWMdata = PWMdata - 1;
         if (PWMdata <= 1) {
           PWMdata = 0;
           state = 0;
         }
+        LEDData[1][1] = 0;
+        LEDData[2][1] = 0;
+        LEDData[3][1] = 1;
         break;
     
     }
@@ -151,34 +161,34 @@ void updatePWM(){
 ==============Read Potentiometer Values=================
 ======================================================*/ 
 void readPots(){
-  atk = calcTime(RV1, 1) << 2; 
-  hold = calcTime(RV2, 2) << 2; 
-  dec = calcTime(RV3, 3) << 2; 
-  sus = analogRead(pot) + 1;  
-  rel = calcTime(RV5, 5) << 4; 
+  atk = calcTime(RV1, 1); 
+  hold = calcTime(RV2, 2); 
+  dec = calcTime(RV3, 3); 
+  sus = analogRead(RV4) >> 2;  
+  rel = calcTime(RV5, 5); 
 
 }
 unsigned int calcTime(unsigned int pot, unsigned int stat){
   unsigned int value = analogRead(pot) + 1; 
   miliadd[stat] = 0;
-  if (value > 63) {
+  if (value > 127) {
     value = value >> 1;
     miliadd[stat] = 1;
   }
   else {
-    if  (value > 127) {
+    if  (value > 255) {
       value = value >> 2;
       miliadd[stat] = 3;
     }
     else {
-      if  (value > 255) {
+      if  (value > 511) {
         value = value >> 3;
         miliadd[stat] = 7;
       }
     }
   }
+  if (value >= 1023) value = 1023;
   if (value <= 1) value = 1;
-  if (value >= 255) value = 255;
   return value;
 }
   
@@ -187,11 +197,11 @@ float calcStep(unsigned int endval){
   int untilnext = nextstate - millis();
   if (untilnext > 1) {
     value = (miliadd[state]+1) * (endval - PWMdata) / untilnext;
-    
   }
-  else value = value * 100;
-  if (endval <= 1) value = 1;
-  if (endval >= 255) value = 255;
+  else if (state == 1) {
+    value = 200;            //state = 1 = attack - only state to increase
+    }
+    else value = -200;      //state 3 = decay state 5 = release is decreasing
   return value;
 }
   
@@ -225,12 +235,12 @@ void GateSignal(){
   if (gatestate) {
     LEDData[0][1] = 1;
     state = 1; // attack state
-    //OCR2A = atk; // change timer interrupt compare
+    nextstate = 0;
   }
   else{
     LEDData[0][1] = 0;
     state = 5; // release state
-    //OCR2A = rel; // change timer interrupt compare
+    nextstate = 0;
   }
 }
 
