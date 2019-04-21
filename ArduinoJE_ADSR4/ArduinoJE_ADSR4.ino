@@ -144,7 +144,7 @@ void readPots(){
   hold = calcTime(RV2, 2); 
   dec = calcTime(RV3, 3); 
   sus = calcTime(RV4, 4); 
-  rel = calcTime(RV5, 5); 
+  rel = calcTime(RV5, 5) << 2; 
 
 }
 unsigned int calcTime(unsigned int pot, unsigned int stat){
@@ -171,17 +171,17 @@ unsigned int calcTime(unsigned int pot, unsigned int stat){
   return value;
 }
   
-int calcStep(unsigned int endval){
+float calcStep(unsigned int endval){
   float value = 0;
   int untilnext = nextstate - millis();
   if (untilnext > 1) {
     value = (miliadd[state]+1) * (endval - PWMdata) / untilnext;
     
   }
-  else value = 1;
+  else value = 255;
   if (endval <= 1) value = 1;
   if (endval >= 255) value = 255;
-  return int(value);
+  return value;
 }
   
 /* =====================================================
