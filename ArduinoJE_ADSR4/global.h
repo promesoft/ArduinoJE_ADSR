@@ -49,8 +49,7 @@
 4 - release
 */
 //boolean stateupdate = LOW;
-boolean gatestate = LOW;
-boolean triggerstate = LOW;
+boolean gatestate = LOW, triggerstate = LOW, lowspeed = LOW, highspeed = LOW;
 unsigned int state = 0;
 unsigned int atk = 1, hold = 1, dec = 1, sus = 1, rel = 1;
 unsigned int LEDData[4][2]; //[LED#][LED Pin,DATA]

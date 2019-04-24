@@ -189,6 +189,8 @@ unsigned int calcTime(unsigned int pot, unsigned int stat){
   }
   if (value >= 1023) value = 1023;
   if (value <= 1) value = 1;
+  if (lowspeed) value = value << 2;
+  if (highspeed) value = value >> 2;
   return value;
 }
   
@@ -196,7 +198,7 @@ float calcStep(unsigned int endval){
   float value = 0;
   int untilnext = nextstate - millis();
   if (untilnext > 1) {
-    value = (miliadd[state]+1) * (endval - PWMdata) / untilnext;
+    value = (miliadd[state]+1) * (endval - PWMdata) / (untilnext);
   }
   else if (state == 1) {
     value = 200;            //state = 1 = attack - only state to increase
@@ -209,8 +211,8 @@ float calcStep(unsigned int endval){
 ==============Read Switch Values========================
 ======================================================*/ 
 void readSwitch(){
-//if ((analogRead(SW2_2) ==  0) && gatestate ) GateSignal();
-//if ((analogRead(SW2_2) >  100) && !gatestate ) GateSignal();
+  lowspeed = (analogRead(SW2_1) > 10);
+  highspeed = (analogRead(SW2_2) > 10);
 }
 /* =====================================================
 ==============Update LED's based on LED Values==========
